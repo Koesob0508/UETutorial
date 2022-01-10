@@ -23,6 +23,12 @@ AABSection::AABSection()
 		ABLOG(Error, TEXT("Failed to load staticmesh asset. : %s"), *AssetPath);
 	}
 
+	Trigger = CreateDefaultSubobject<UBoxComponent>(TEXT("TRIGGER"));
+	Trigger->SetBoxExtent(FVector(775.0f, 775.0f, 300.0f));
+	Trigger->SetupAttachment(RootComponent);
+	Trigger->SetRelativeLocation(FVector(0.0f, 0.0f, 250.0f));
+	Trigger->SetCollisionProfileName(TEXT("ABTrigger"));
+
 	FString GateAssetPath = TEXT("/Game/Book/StaticMesh/SM_GATE.SM_GATE");
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> SM_GATE(*GateAssetPath);
 	if (SM_GATE.Succeeded())
@@ -39,8 +45,16 @@ AABSection::AABSection()
 		NewGate->SetupAttachment(RootComponent, GateSocket);
 		NewGate->SetRelativeLocation(FVector(0.0f, -80.5f, 0.0f));
 		GateMeshes.Add(NewGate);
+
+		UBoxComponent* NewGateTrigger = CreateDefaultSubobject<UBoxComponent>(*GateSocket.ToString().Append(TEXT("Trigger")));
+		NewGateTrigger->SetBoxExtent(FVector(100.0f, 100.0f, 300.0f));
+		NewGateTrigger->SetupAttachment(RootComponent, GateSocket);
+		NewGateTrigger->SetRelativeLocation(FVector(70.0f, 0.0f, 250.0f));
+		NewGateTrigger->SetCollisionProfileName(TEXT("ABTrigger"));
+		GateTriggers.Add(NewGateTrigger);
 	}
 
+	bNoBattle = false;
 }
 
 // Called when the game starts or when spawned
@@ -48,5 +62,56 @@ void AABSection::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	SetState(bNoBattle ? ESectionState::COMPLETE : ESectionState::READY);
+}
+
+void AABSection::SetState(ESectionState NewState)
+{
+	switch (NewState)
+	{
+	case ESectionState::READY:
+	{
+		Trigger->SetCollisionProfileName(TEXT("ABTrigger"));
+		for (UBoxComponent* GateTrigger : GateTriggers)
+		{
+			GateTrigger->SetCollisionProfileName(TEXT("NoCollision"));
+		}
+
+		OperateGates(true);
+		break;
+	}
+	case ESectionState::BATTLE:
+	{
+		Trigger->SetCollisionProfileName(TEXT("NoCollision"));
+		for (UBoxComponent* GateTrigger : GateTriggers)
+		{
+			GateTrigger->SetCollisionProfileName(TEXT("NoCollision"));
+		}
+
+		OperateGates(false);
+		break;
+	}
+	case ESectionState::COMPLETE:
+	{
+		Trigger->SetCollisionProfileName(TEXT("NoCollision"));
+		for (UBoxComponent* GateTrigger : GateTriggers)
+		{
+			GateTrigger->SetCollisionProfileName(TEXT("ABTrigger"));
+		}
+
+		OperateGates(true);
+		break;
+	}
+	}
+
+	CurrentState = NewState;
+}
+
+void AABSection::OperateGates(bool bOpen)
+{
+	for (UStaticMeshComponent* Gate : GateMeshes)
+	{
+		Gate->SetRelativeRotation(bOpen ? FRotator(0.0f, -90.0f, 0.0f) : FRotator::ZeroRotator);
+	}
 }
 
