@@ -5,7 +5,6 @@
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 #include "ABCharacterStatComponent.h"
-#include "ABPlayerState.h"
 
 void UABHUDWidget::BindCharacterStat(UABCharacterStatComponent* CharacterStat)
 {
