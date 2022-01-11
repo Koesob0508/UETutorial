@@ -25,9 +25,6 @@ public:
 	void RunAI();
 	void StopAI();
 	
-	void RunAI();
-	void StopAI();
-
 private:
 	UPROPERTY()
 		class UBehaviorTree* BTAsset;
