@@ -95,7 +95,7 @@ void AABCharacter::SetCharacterState(ECharacterState NewState)
 		{
 			ABLOG(Warning, TEXT("Character Asset : %s"), *CharacterAsset.ToString());
 		}
-	}*/
+	}
 }
 
 // Called when the game starts or when spawned
